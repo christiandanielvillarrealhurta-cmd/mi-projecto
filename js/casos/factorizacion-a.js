@@ -742,7 +742,7 @@
         },
         {
           expr: fac(1, a.add(b), a.sub(b)),
-          why: '(a + b)(a − b) da a² − b², que no tiene término central. Eso es una diferencia de cuadrados.',
+          why: fx('(a + b)(a - b)') + ' da ' + fx('a^2 - b^2') + ', que no tiene término central. Eso es una diferencia de cuadrados.',
         },
         {
           expr: fac(1, [a.add(b2.scale(s)), 2]),

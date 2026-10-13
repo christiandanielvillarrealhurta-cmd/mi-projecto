@@ -14,14 +14,33 @@
   const { Alg, MA } = root;
   const { P, fac, h, hm, hp, fx, eq, raw, rand } = Alg;
 
+  /** Letra del nivel fácil: casi siempre x; a veces m o y, para variar. */
+  function letraFacil() {
+    return P(rand.pick(['x', 'x', 'x', 'm', 'y']));
+  }
+
+  /**
+   * Repite la elección de los términos a y b hasta que el binomio no tenga
+   * factor común numérico, como en los libros: (2x + 3)², no (4x + 8)².
+   */
+  function coprimos(elegir) {
+    let t = elegir();
+    for (let i = 0; i < 200 && Alg.gcd(t.a.terms[0].c, t.b.terms[0].c) !== 1; i++) t = elegir();
+    return t;
+  }
+
   /* ================================================================== */
   /* 1. Binomio al cuadrado: (a ± b)² = a² ± 2ab + b²                    */
   /* ================================================================== */
 
   /** Elige a (con variable) y b (positivo) según la dificultad. */
   function terminosBinomioCuadrado(level) {
+    return coprimos(() => elegirBinomioCuadrado(level));
+  }
+
+  function elegirBinomioCuadrado(level) {
     if (level === 'facil') {
-      return { a: P('x'), b: P(rand.int(1, 9)) };
+      return { a: letraFacil(), b: P(rand.int(1, 9)) };
     }
     if (level === 'medio') {
       if (rand.chance(0.6)) return { a: P(rand.int(2, 6) + 'x'), b: P(rand.int(1, 9)) };
@@ -93,15 +112,15 @@
       const distractors = [
         {
           expr: a2.add(b2.scale(s)),
-          why: 'Olvidaste el doble producto 2ab: (a ± b)² no es igual a a² ± b².',
+          why: 'Olvidaste el doble producto ' + fx('2ab') + ': ' + fx('(a ± b)^2') + ' no es igual a ' + fx('a^2 ± b^2') + '.',
         },
         {
           expr: a2.add(b2),
-          why: 'Falta el término central: el doble producto del primero por el segundo (2ab).',
+          why: 'Falta el término central: el doble producto del primero por el segundo, ' + fx('2ab') + '.',
         },
         {
           expr: a2.add(a.mul(b).scale(s)).add(b2),
-          why: 'El término central es el DOBLE del producto: 2ab, no solo ab.',
+          why: 'El término central es el doble del producto: ' + fx('2ab') + ', no solo ' + fx('ab') + '.',
         },
         {
           expr: a2.add(dobleAB.scale(-s)).add(b2),
@@ -109,11 +128,11 @@
         },
         {
           expr: a2.add(dobleAB.scale(s)).sub(b2),
-          why: 'El cuadrado del segundo término siempre es positivo: b² = b · b.',
+          why: 'El cuadrado del segundo término siempre es positivo: ' + fx('b^2 = b*b') + '.',
         },
         {
           expr: a2.add(dobleAB.scale(s)).add(b.scale(2)),
-          why: 'b² significa b · b, no 2 · b.',
+          why: fx('b^2') + ' significa ' + fx('b*b') + ', no ' + fx('2*b') + '.',
         },
       ];
       if (coefA !== 1) {
@@ -205,8 +224,12 @@
 
   /** Elige a (con x) y b (positivo) según la dificultad. */
   function terminosConjugados(level) {
+    return coprimos(() => elegirConjugados(level));
+  }
+
+  function elegirConjugados(level) {
     if (level === 'facil') {
-      return { a: P('x'), b: P(rand.int(1, 9)) };
+      return { a: letraFacil(), b: P(rand.int(1, 9)) };
     }
     if (level === 'medio') {
       if (rand.chance(0.6)) return { a: P(rand.int(2, 6) + 'x'), b: P(rand.int(1, 9)) };
@@ -358,7 +381,7 @@
     do {
       p = rand.nonZero(-9, 9);
       q = rand.nonZero(-9, 9);
-    } while (p === q || p + q === 0);
+    } while (p === q || p + q === 0 || Alg.gcd(u.terms[0].c, p) !== 1 || Alg.gcd(u.terms[0].c, q) !== 1);
     return { u, r, p, q };
   }
 
@@ -475,8 +498,12 @@
 
   /** Elige a (con x) y b (positivo) según la dificultad. */
   function terminosBinomioCubo(level) {
+    return coprimos(() => elegirBinomioCubo(level));
+  }
+
+  function elegirBinomioCubo(level) {
     if (level === 'facil') {
-      return { a: P('x'), b: P(rand.int(1, 6)) };
+      return { a: letraFacil(), b: P(rand.int(1, 6)) };
     }
     if (level === 'medio') {
       if (rand.chance(0.6)) return { a: P(rand.int(2, 3) + 'x'), b: P(rand.int(1, 4)) };
@@ -641,11 +668,13 @@
     if (level === 'medio') {
       let m;
       let n;
+      let k;
       do {
         m = rand.int(1, 4);
         n = rand.int(1, 4);
-      } while (m === 1 && n === 1);
-      return [mono(m, { x: 1 }), mono(rand.sign() * n, { y: 1 }), P(rand.sign() * rand.int(1, 6))];
+        k = rand.int(1, 6);
+      } while ((m === 1 && n === 1) || Alg.gcdAll([m, n, k]) !== 1);
+      return [mono(m, { x: 1 }), mono(rand.sign() * n, { y: 1 }), P(rand.sign() * k)];
     }
     if (rand.chance(0.5)) {
       // (x² ± mx ± n)²: b² y 2ac son términos semejantes (los dos llevan x²).
@@ -665,7 +694,7 @@
       m = rand.int(1, 4);
       n = rand.int(1, 4);
       k = rand.int(1, 5);
-    } while (m * n * k === 1);
+    } while (m * n * k === 1 || Alg.gcdAll([m, n, k]) !== 1);
     return [mono(m, { x: 1 }), mono(rand.sign() * n, { y: 1 }), mono(rand.sign() * k, { z: 1 })];
   }
 
@@ -812,8 +841,12 @@
 
   /** Elige a (con x) y b (positivo) según la dificultad. */
   function terminosBinomioTrinomio(level) {
+    return coprimos(() => elegirBinomioTrinomio(level));
+  }
+
+  function elegirBinomioTrinomio(level) {
     if (level === 'facil') {
-      return { a: P('x'), b: P(rand.int(1, 5)) };
+      return { a: letraFacil(), b: P(rand.int(1, 5)) };
     }
     if (level === 'medio') {
       if (rand.chance(0.6)) return { a: P(rand.int(2, 4) + 'x'), b: P(rand.int(1, 5)) };

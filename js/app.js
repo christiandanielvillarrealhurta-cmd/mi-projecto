@@ -488,53 +488,61 @@
         el('div', { class: 'resumen-texto' }, [
           el('strong', { text: message(p) }),
           el('p', { text: 'Contestaste bien ' + ok + ' de ' + plural(total, 'ejercicio', 'ejercicios') + ' (' + p + '%).' }),
-          el('p', { text: TOPIC_NAMES[last.topic] + ' · dificultad ' + LEVEL_NAMES[last.level].toLowerCase() }),
+          el('p', { text: TOPIC_NAMES[last.topic] + ' · nivel ' + LEVEL_NAMES[last.level].toLowerCase() }),
         ]),
       ])
     );
 
-    // Dónde fallaste más y menos
+    // Dónde fallaste más y menos (si hay empate se nombran todos los empatados)
     const rows = statsByCase(last);
     const worstSorted = rows.slice().sort((a, b) => b.bad - a.bad || a.pct - b.pct || b.attempts - a.attempts);
-    const worst = worstSorted.find((r) => r.bad > 0) || null;
-    const bestSorted = rows.slice().sort((a, b) => b.pct - a.pct || a.bad - b.bad || b.attempts - a.attempts);
-    const best = rows.length > 1 ? bestSorted.find((r) => !worst || r.id !== worst.id) : null;
+    const failed = rows.filter((r) => r.bad > 0);
+    const tile = (cls, label, value, detail) =>
+      el('div', { class: cls }, [
+        el('span', { class: 'etiqueta', text: label }),
+        el('span', { class: 'valor', text: value }),
+        el('span', { class: 'detalle', text: detail }),
+      ]);
+    const names = (list) => {
+      const n = list.map((r) => r.name);
+      if (n.length === 1) return n[0];
+      if (n.length <= 3) return n.slice(0, -1).join(', ') + ' y ' + n[n.length - 1];
+      return n.slice(0, 2).join(', ') + ' y ' + plural(n.length - 2, 'caso más', 'casos más');
+    };
 
     const tiles = [];
-    if (worst) {
+    if (failed.length === 0) {
+      tiles.push(tile('destacado mejor', 'Sin errores', 'No fallaste en ningún caso', 'Prueba subir la dificultad o agregar más casos.'));
+    } else {
+      const top = worstSorted[0];
+      const worst = worstSorted.filter((r) => r.bad === top.bad && r.pct === top.pct);
       tiles.push(
-        el('div', { class: 'destacado' }, [
-          el('span', { class: 'etiqueta', text: 'Donde más fallaste' }),
-          el('span', { class: 'valor', text: worst.name }),
-          el('span', {
-            class: 'detalle',
-            text: plural(worst.bad, 'error', 'errores') + ' en ' + plural(worst.attempts, 'ejercicio', 'ejercicios') + ' (' + worst.pct + '% bien)',
-          }),
-        ])
+        tile(
+          'destacado',
+          worst.length > 1 ? 'Donde más fallaste (empate)' : 'Donde más fallaste',
+          names(worst),
+          worst.length > 1
+            ? plural(top.bad, 'error', 'errores') + ' en cada uno (' + top.pct + '% bien)'
+            : plural(top.bad, 'error', 'errores') + ' en ' + plural(top.attempts, 'ejercicio', 'ejercicios') + ' (' + top.pct + '% bien)'
+        )
       );
+      const rest = rows
+        .filter((r) => worst.indexOf(r) === -1 && r.pct > top.pct)
+        .sort((a, b) => b.pct - a.pct || a.bad - b.bad || b.attempts - a.attempts);
+      if (rest.length) {
+        const b0 = rest[0];
+        const best = rest.filter((r) => r.pct === b0.pct && r.bad === b0.bad);
+        tiles.push(
+          tile(
+            'destacado mejor',
+            best.length > 1 ? 'Donde menos fallaste (empate)' : 'Donde menos fallaste',
+            names(best),
+            best.length > 1 ? b0.pct + '% bien en cada uno' : b0.ok + ' de ' + plural(b0.attempts, 'ejercicio', 'ejercicios') + ' bien (' + b0.pct + '%)'
+          )
+        );
+      }
     }
-    if (best && (!worst || best.pct > worst.pct)) {
-      tiles.push(
-        el('div', { class: 'destacado mejor' }, [
-          el('span', { class: 'etiqueta', text: worst ? 'Donde menos fallaste' : 'Tu mejor caso' }),
-          el('span', { class: 'valor', text: best.name }),
-          el('span', {
-            class: 'detalle',
-            text: best.ok + ' de ' + best.attempts + ' bien (' + best.pct + '%)',
-          }),
-        ])
-      );
-    }
-    if (!worst) {
-      tiles.unshift(
-        el('div', { class: 'destacado mejor' }, [
-          el('span', { class: 'etiqueta', text: 'Sin errores' }),
-          el('span', { class: 'valor', text: 'No fallaste en ningún caso' }),
-          el('span', { class: 'detalle', text: 'Prueba subir la dificultad o agregar más casos.' }),
-        ])
-      );
-    }
-    if (tiles.length) box.appendChild(el('section', { class: 'destacados' }, tiles));
+    box.appendChild(el('section', { class: 'destacados' }, tiles));
 
     // Tabla por caso (de más errores a menos)
     const showTopic = last.topic === 'mezcla';
@@ -637,7 +645,7 @@
       box.appendChild(el('section', { class: 'bloque' }, [el('h2', { text: 'Repasa tus errores' }), list]));
     }
 
-    $('btn-practicar-fallos').hidden = !worst;
+    $('btn-practicar-fallos').hidden = failed.length === 0;
   }
 
   /* ------------------------------------------------------------------ */

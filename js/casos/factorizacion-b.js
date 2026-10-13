@@ -650,7 +650,7 @@
       let A;
       let B;
       if (level === 'facil') {
-        A = P(rand.pick(['x', 'x', 'x', 'x', 'a', 'm']));
+        A = P(rand.pick(['x', 'x', 'x', 'x', 'm', 'y']));
         B = P(rand.int(1, 6));
       } else if (level === 'medio') {
         if (rand.chance(0.6)) {
@@ -822,7 +822,7 @@
       let A;
       let B;
       if (level === 'facil') {
-        A = P(rand.pick(['x', 'x', 'x', 'x', 'a', 'm']));
+        A = P(rand.pick(['x', 'x', 'x', 'x', 'm', 'y']));
         B = P(rand.int(1, 6));
       } else if (level === 'medio') {
         if (rand.chance(0.6)) {
