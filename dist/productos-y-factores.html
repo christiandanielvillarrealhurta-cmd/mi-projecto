@@ -22,6 +22,10 @@
   --acento-suave: #e6ecfb;
   --marcatextos: #ffe36e;
   --marcatextos-tinta: #3a2f00;
+  --nivel-facil: #4ade80;
+  --nivel-facil-tinta: #0b3b1f;
+  --nivel-dificil: #f76b6b;
+  --nivel-dificil-tinta: #4a0e0e;
   --bien: #1b7f47;
   --bien-fondo: #e2f3e9;
   --mal: #bf3434;
@@ -49,6 +53,10 @@
     --acento-suave: #1f2b47;
     --marcatextos: #6b5a14;
     --marcatextos-tinta: #fff3c4;
+    --nivel-facil: #1f5c36;
+    --nivel-facil-tinta: #c9f7d8;
+    --nivel-dificil: #7a2424;
+    --nivel-dificil-tinta: #ffd6d6;
     --bien: #5fd394;
     --bien-fondo: #12301f;
     --mal: #ff8a8a;
@@ -70,6 +78,10 @@
   --acento-suave: #1f2b47;
   --marcatextos: #6b5a14;
   --marcatextos-tinta: #fff3c4;
+  --nivel-facil: #1f5c36;
+  --nivel-facil-tinta: #c9f7d8;
+  --nivel-dificil: #7a2424;
+  --nivel-dificil-tinta: #ffd6d6;
   --bien: #5fd394;
   --bien-fondo: #12301f;
   --mal: #ff8a8a;
@@ -579,6 +591,17 @@ h2 {
   border-radius: 99px;
   background: var(--marcatextos);
   color: var(--marcatextos-tinta);
+}
+
+/* Color de la etiqueta según la dificultad: fácil verde, medio amarillo, difícil rojo. */
+.chip-facil {
+  background: var(--nivel-facil);
+  color: var(--nivel-facil-tinta);
+}
+
+.chip-dificil {
+  background: var(--nivel-dificil);
+  color: var(--nivel-dificil-tinta);
 }
 
 .enunciado {
@@ -5946,6 +5969,7 @@ h2 {
     if (s.answered) $('practica-num').textContent = 'Ejercicio ' + s.history.length;
     $('ejercicio-instruccion').textContent = q.instruction;
     $('ejercicio-nivel').textContent = LEVEL_NAMES[q.level];
+    $('ejercicio-nivel').className = 'chip chip-' + q.level;
     $('ejercicio-enunciado').innerHTML = nb(q.promptHtml);
 
     const hoja = $('hoja');

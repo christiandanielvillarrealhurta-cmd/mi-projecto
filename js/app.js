@@ -259,6 +259,7 @@
     if (s.answered) $('practica-num').textContent = 'Ejercicio ' + s.history.length;
     $('ejercicio-instruccion').textContent = q.instruction;
     $('ejercicio-nivel').textContent = LEVEL_NAMES[q.level];
+    $('ejercicio-nivel').className = 'chip chip-' + q.level;
     $('ejercicio-enunciado').innerHTML = nb(q.promptHtml);
 
     const hoja = $('hoja');
