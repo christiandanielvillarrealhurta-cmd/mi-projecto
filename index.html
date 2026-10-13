@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Productos y Factores</title>
+<meta name="description" content="Practica productos notables y factorización con ejercicios de opción múltiple, procedimiento paso a paso y resultados por caso.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=STIX+Two+Text:ital,wght@0,400;0,600;1,400;1,600&display=swap">
+<link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+<!--CONTENIDO-->
+<div class="app" id="app">
+
+  <header class="marca">
+    <button class="marca-nombre" type="button" data-accion="inicio" aria-label="Ir al inicio">
+      <span class="marca-logo m" aria-hidden="true">(<i>a</i>+<i>b</i>)<sup>2</sup></span>
+      <span>Productos y Factores</span>
+    </button>
+  </header>
+
+  <!-- ============ INICIO ============ -->
+  <main class="pantalla" id="pantalla-inicio">
+    <section class="intro">
+      <p class="eyebrow">Práctica de álgebra</p>
+      <h1>¿Qué quieres practicar hoy?</h1>
+      <p class="lead">Elige un tema, después los casos y la dificultad. Verás un ejercicio con 4 opciones; al responder te mostramos el procedimiento completo.</p>
+    </section>
+
+    <div class="temas">
+      <button class="tema" type="button" data-tema="productos">
+        <span class="tema-nombre">Productos notables</span>
+        <span class="tema-ejemplo m">(2<i>x</i> − 3)<sup>2</sup> = 4<i>x</i><sup>2</sup> − 12<i>x</i> + 9</span>
+        <span class="tema-detalle"><span data-conteo="productos">6 casos</span> · desarrollar productos</span>
+      </button>
+      <button class="tema" type="button" data-tema="factorizacion">
+        <span class="tema-nombre">Factorización</span>
+        <span class="tema-ejemplo m"><i>x</i><sup>2</sup> + 5<i>x</i> + 6 = (<i>x</i> + 3)(<i>x</i> + 2)</span>
+        <span class="tema-detalle"><span data-conteo="factorizacion">9 casos</span> · convertir en producto</span>
+      </button>
+    </div>
+
+    <div class="mezcla">
+      <button class="btn-texto" type="button" data-tema="mezcla">Mezclar los dos temas en una sola práctica</button>
+    </div>
+  </main>
+
+  <!-- ============ CASOS Y DIFICULTAD ============ -->
+  <main class="pantalla" id="pantalla-casos" hidden>
+    <button class="volver" type="button" data-accion="inicio">← Cambiar de tema</button>
+    <section class="intro intro-compacta">
+      <p class="eyebrow" id="casos-tema">Productos notables</p>
+      <h1>Elige los casos</h1>
+      <p class="lead">Solo te saldrán ejercicios de los casos que marques.</p>
+    </section>
+
+    <div class="casos-herramientas">
+      <button class="btn-chico" type="button" id="btn-todos">Seleccionar todos</button>
+      <button class="btn-chico" type="button" id="btn-ninguno">Quitar todos</button>
+    </div>
+
+    <div id="lista-casos" class="lista-casos"></div>
+
+    <section class="dificultad">
+      <h2>Dificultad</h2>
+      <div class="segmentos" role="radiogroup" aria-label="Dificultad">
+        <label class="segmento"><input type="radio" name="nivel" id="nivel-facil" value="facil"><span>Fácil</span></label>
+        <label class="segmento"><input type="radio" name="nivel" id="nivel-medio" value="medio" checked><span>Medio</span></label>
+        <label class="segmento"><input type="radio" name="nivel" id="nivel-dificil" value="dificil"><span>Difícil</span></label>
+        <label class="segmento"><input type="radio" name="nivel" id="nivel-revuelto" value="revuelto"><span>Revuelto</span></label>
+      </div>
+      <p class="nivel-desc" id="nivel-desc"></p>
+    </section>
+
+    <div class="barra-inferior">
+      <span id="casos-conteo" class="casos-conteo">0 casos seleccionados</span>
+      <button class="btn-primario" type="button" id="btn-comenzar" disabled>Comenzar práctica</button>
+    </div>
+  </main>
+
+  <!-- ============ PRÁCTICA ============ -->
+  <main class="pantalla" id="pantalla-practica" hidden>
+    <div class="practica-barra">
+      <div class="practica-info">
+        <span class="practica-num" id="practica-num">Ejercicio 1</span>
+        <span class="marcador" id="marcador"><span class="marcador-ok">0</span> bien · <span class="marcador-mal">0</span> mal</span>
+      </div>
+      <button class="btn-chico btn-terminar" type="button" id="btn-terminar">Terminar sesión</button>
+    </div>
+
+    <article class="hoja" id="hoja">
+      <div class="hoja-cabeza">
+        <p class="eyebrow" id="ejercicio-instruccion">Desarrolla el producto notable:</p>
+        <span class="chip" id="ejercicio-nivel">Medio</span>
+      </div>
+      <div class="enunciado m" id="ejercicio-enunciado" aria-live="polite"></div>
+    </article>
+
+    <div class="opciones" id="opciones" role="group" aria-label="Opciones de respuesta"></div>
+    <p class="atajo">Atajo: teclas 1–4 para elegir, Enter para continuar.</p>
+
+    <section class="retro" id="retro" hidden tabindex="-1">
+      <div class="retro-veredicto" id="retro-veredicto"></div>
+      <div class="retro-caso" id="retro-caso"></div>
+      <h2 class="retro-titulo">Procedimiento</h2>
+      <ol class="pasos" id="pasos"></ol>
+      <div class="retro-acciones">
+        <button class="btn-primario" type="button" id="btn-continuar">Continuar con el siguiente →</button>
+      </div>
+    </section>
+  </main>
+
+  <!-- ============ RESULTADOS ============ -->
+  <main class="pantalla" id="pantalla-resultados" hidden>
+    <section class="intro intro-compacta">
+      <p class="eyebrow">Fin de la sesión</p>
+      <h1>Tu resultado</h1>
+    </section>
+
+    <div id="resultado-contenido"></div>
+
+    <div class="resultado-acciones">
+      <button class="btn-primario" type="button" id="btn-practicar-fallos">Practicar donde fallé</button>
+      <button class="btn-secundario" type="button" id="btn-repetir">Repetir la misma práctica</button>
+      <button class="btn-secundario" type="button" data-accion="inicio">Volver al inicio</button>
+    </div>
+  </main>
+
+  <!-- ============ CONFIRMAR FIN ============ -->
+  <div class="capa" id="capa-terminar" hidden>
+    <div class="dialogo" role="dialog" aria-modal="true" aria-labelledby="dialogo-titulo">
+      <h2 id="dialogo-titulo">¿Terminar la sesión?</h2>
+      <p id="dialogo-texto"></p>
+      <div class="dialogo-acciones">
+        <button class="btn-secundario" type="button" id="btn-seguir">Seguir practicando</button>
+        <button class="btn-primario" type="button" id="btn-confirmar-fin">Ver mi resultado</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/algebra.js"></script>
+<script src="js/motor.js"></script>
+<script src="js/casos/productos.js"></script>
+<script src="js/casos/factorizacion-a.js"></script>
+<script src="js/casos/factorizacion-b.js"></script>
+<script src="js/app.js"></script>
+<!--/CONTENIDO-->
+</body>
+</html>
