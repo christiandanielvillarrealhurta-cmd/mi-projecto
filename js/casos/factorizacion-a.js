@@ -319,9 +319,17 @@
         const divs = Alg.divisors(gc).filter((d) => d > 1 && d < gc);
         if (divs.length) {
           const d = rand.pick(divs);
+          const malMCD = fac(mono(d, gv), Q);
           ds.push({
-            expr: fac(mono(d, gv), Q),
-            why: 'El MCD de los coeficientes es ' + gc + ', no ' + d + ': hay que sacar el factor común más grande.',
+            expr: malMCD,
+            why:
+              'El MCD de los coeficientes es ' +
+              gc +
+              ', no ' +
+              d +
+              '. Comprueba multiplicando: ' +
+              eq(h(malMCD), h(malMCD.expand())) +
+              ', que no es la expresión original.',
           });
         } else if (comunes.length) {
           ds.push({
@@ -579,7 +587,12 @@
         },
         {
           expr: fac(1, F1menosB, F2menosD),
-          why: 'Al multiplicar tus factores, el término ' + h(AD) + ' saldría con el signo contrario. Revisa los signos.',
+          why:
+            'Al multiplicar tus factores, los términos ' +
+            h(AD) +
+            ' y ' +
+            h(BC) +
+            ' saldrían con el signo contrario. Revisa el signo del binomio común y el del factor del segundo grupo.',
         },
       ];
       const F1cambio = enOrden([A, D]);
@@ -660,11 +673,17 @@
       let s;
       let binomio;
       // El binomio no debe poder factorizarse más (p. ej. 4x² − y² es diferencia de cuadrados).
-      do {
+      for (let intento = 0; ; intento++) {
         ({ a, b } = terminosTCP(level));
         s = rand.sign();
         binomio = a.add(b.scale(s));
-      } while (Alg.reducibleReason(binomio));
+        if (!Alg.reducibleReason(binomio)) break;
+        if (intento >= 200) {
+          ({ a, b } = { a: P('x'), b: P(3) });
+          binomio = a.add(b.scale(s));
+          break;
+        }
+      }
       const prompt = binomio.pow(2);
       const answer = fac(1, [binomio, 2]);
 
@@ -696,7 +715,8 @@
             h(dobleAB) +
             ', que coincide con el término central ' +
             h(central) +
-            ' (sin contar su signo). ✓ Es un trinomio cuadrado perfecto.',
+            (s < 0 ? ' (sin contar su signo)' : '') +
+            '. ✓ Es un trinomio cuadrado perfecto.',
         },
         {
           title: 'Elige el signo',
@@ -744,7 +764,8 @@
         });
       }
 
-      return { prompt, answer, distractors, steps, key: 'f-tcp|' + Alg.text(prompt) };
+      // Con b = 1 el error "sin raíz" coincide con la respuesta: limpiar() lo quita.
+      return { prompt, answer, distractors: limpiar(distractors, answer), steps, key: 'f-tcp|' + Alg.text(prompt) };
     },
   });
 
@@ -873,11 +894,21 @@
       const ds = [
         {
           expr: fac(1, R, R),
-          why: 'Dos factores iguales dan un trinomio: ' + fx('(a - b)^2 = a^2 - 2ab + b^2') + '. Los signos deben ser contrarios.',
+          why:
+            'Dos factores iguales dan un trinomio: ' +
+            fx('(a - b)(a - b) = a^2 - 2ab + b^2') +
+            '. En una diferencia de cuadrados un factor lleva + y el otro ' +
+            MINUS +
+            '.',
         },
         {
           expr: fac(1, S, S),
-          why: 'Así obtienes ' + fx('a^2 + 2ab + b^2') + '. En una diferencia de cuadrados un factor lleva + y el otro ' + MINUS + '.',
+          why:
+            'Dos factores iguales dan un trinomio: ' +
+            fx('(a + b)(a + b) = a^2 + 2ab + b^2') +
+            '. En una diferencia de cuadrados un factor lleva + y el otro ' +
+            MINUS +
+            '.',
         },
       ];
 
@@ -1028,6 +1059,22 @@
       const binTCP = U.add(V);
       const tcp = binTCP.pow(2);
 
+      // Con término central negativo, se explica por qué no se completa a −2(…)(…).
+      let notaSigno = '';
+      if (B < 0) {
+        const otroCentral = necesario.neg();
+        const faltaria = otroCentral.sub(actual); // −2mn − B
+        const fc = faltaria.isZero() ? 0 : coef(faltaria);
+        if (fc !== 0 && !(fc > 0 && Alg.isSquare(fc))) {
+          notaSigno =
+            ' Aunque el término central es negativo, no sirve completar a ' +
+            h(otroCentral) +
+            ': faltaría ' +
+            eq(hm(raw(otroCentral) + ' ' + MINUS + ' ' + rawParen(actual)), h(faltaria)) +
+            ', que no es un cuadrado perfecto positivo.';
+        }
+      }
+
       const steps = [
         {
           title: 'Revisa los términos extremos',
@@ -1054,7 +1101,8 @@
             eq(hm(raw(necesario) + ' ' + MINUS + ' ' + (B < 0 ? rawParen(actual) : raw(actual))), h(falta)) +
             ', que es un cuadrado perfecto: ' +
             eq(hsqrt(falta), h(R)) +
-            '.',
+            '.' +
+            notaSigno,
         },
         {
           title: 'Suma y resta lo que falta',
@@ -1069,11 +1117,7 @@
           title: 'Forma el trinomio cuadrado perfecto',
           html:
             'Juntamos ' +
-            h(actual) +
-            ' + ' +
-            h(falta) +
-            ' = ' +
-            h(necesario) +
+            eq(hm(rawSuma([actual, falta])), h(necesario)) +
             ' y escribimos el trinomio como cuadrado: ' +
             eq(hm('(' + raw(tcp) + ') ' + MINUS + ' ' + raw(falta)), hm(rawPow(binTCP, 2) + ' ' + MINUS + ' ' + raw(falta))) +
             '.',
@@ -1081,12 +1125,17 @@
         {
           title: 'Factoriza la diferencia de cuadrados',
           html:
-            'Las raíces son ' +
-            h(binTCP) +
+            'Queda una diferencia de cuadrados, ' +
+            fx('A^2 - B^2 = (A + B)(A - B)') +
+            ', con ' +
+            eq(fx('A'), h(binTCP)) +
             ' y ' +
-            h(R) +
-            ', así que queda ' +
-            hm('(' + raw(binTCP) + ' + ' + raw(R) + ')(' + raw(binTCP) + ' ' + MINUS + ' ' + raw(R) + ')') +
+            eq(fx('B'), h(R)) +
+            ': ' +
+            eq(
+              hm(rawPow(binTCP, 2) + ' ' + MINUS + ' ' + rawPow(R, 2)),
+              hm('(' + raw(binTCP) + ' + ' + raw(R) + ')(' + raw(binTCP) + ' ' + MINUS + ' ' + raw(R) + ')')
+            ) +
             '.',
         },
         {
@@ -1124,7 +1173,10 @@
         const Vmal = mono(coef(V) * coef(V), literal(V));
         ds.push({
           expr: fac(1, U.add(R).add(Vmal), U.sub(R).add(Vmal)),
-          why: 'Falta sacar la raíz del coeficiente del último término: ' + eq(hsqrt(ultimo), h(V)) + '.',
+          why:
+            (V.isConst() ? 'Falta sacar la raíz cuadrada del último término: ' : 'Falta sacar la raíz del coeficiente del último término: ') +
+            eq(hsqrt(ultimo), h(V)) +
+            '.',
         });
       }
       if (coef(U) >= 2) {
